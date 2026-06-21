@@ -3,7 +3,7 @@ import { Environment } from '@env/environment.model';
 export const environment: Environment = {
   production: true,
   api: {
-    baseUrl: 'https://api-produccion.com/prx',
+    baseUrl: 'https://dockerimgprx-production.up.railway.app/prx',
     timeout: 10000,
   },
   storage: {
