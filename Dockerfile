@@ -5,25 +5,18 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# ✅ DATABASE_URL ficticio solo para que prisma generate no falle en build
 ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV DATABASE_URL=$DATABASE_URL
 
-# --- Dependencias Backend ---
 COPY prx-backend/package*.json ./prx-backend/
 RUN cd prx-backend && npm ci
 
-# --- Dependencias Frontend ---
 COPY prx-frontend/package*.json ./prx-frontend/
 RUN cd prx-frontend && npm ci
 
-# Copiar TODO el código fuente
 COPY . .
 
-# Build Backend (NestJS) — prisma generate usa DATABASE_URL ficticio
 RUN cd prx-backend && npm run build
-
-# Build Frontend (Angular)
 RUN cd prx-frontend && npm run build
 
 # ==============================
@@ -33,20 +26,27 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# Backend
 COPY --from=builder /app/prx-backend/dist          ./prx-backend/dist
 COPY --from=builder /app/prx-backend/node_modules  ./prx-backend/node_modules
 COPY --from=builder /app/prx-backend/package.json  ./prx-backend/package.json
 COPY --from=builder /app/prx-backend/prisma        ./prx-backend/prisma
 
-# Frontend
+# Copiar también el cliente generado de Prisma
+COPY --from=builder /app/prx-backend/generated     ./prx-backend/generated
+
 COPY --from=builder /app/prx-frontend/dist/prx-frontend/browser ./prx-frontend-static
 
 WORKDIR /app/prx-backend
 
-# ✅ En producción, Railway inyecta el DATABASE_URL real
+ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ENV DATABASE_URL=$DATABASE_URL
+
 RUN npx prisma generate
+
+# ✅ Muestra qué archivos .js hay en dist (visible en los Build Logs)
+RUN echo "=== ARCHIVOS EN DIST ===" && find dist -name "*.js" | sort
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+# ✅ Intenta dist/main primero, si falla prueba dist/src/main
+CMD ["sh", "-c", "if [ -f dist/main.js ]; then node dist/main; elif [ -f dist/src/main.js ]; then node dist/src/main; else echo 'ERROR: main.js no encontrado' && find dist -name '*.js' && exit 1; fi"]
