@@ -20,7 +20,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix(apiPrefix);
   app.enableCors({
-  origin: ['https://prxdockerimagefront-production.up.railway.app'],
+  origin: ['https://prxdockerimagefront-production.up.railway.app', 'http://localhost:8081',
+  'http://localhost:4200'],
   credentials: true,
 });
   app.use(helmet());

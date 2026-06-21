@@ -5,7 +5,7 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ARG DATABASE_URL="mysql://build:build@localhost:3306/build"
 ENV DATABASE_URL=$DATABASE_URL
 
 COPY prx-backend/package*.json ./prx-backend/
@@ -38,7 +38,7 @@ COPY --from=builder /app/prx-frontend/dist/prx-frontend/browser ./prx-frontend-s
 
 WORKDIR /app/prx-backend
 
-ARG DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ARG DATABASE_URL="mysql://build:build@localhost:3306/build"
 ENV DATABASE_URL=$DATABASE_URL
 
 RUN npx prisma generate
