@@ -19,7 +19,10 @@ async function bootstrap() {
   const apiPrefix = configService.getOrThrow<string>('app.apiPrefix');
 
   app.setGlobalPrefix(apiPrefix);
-  app.enableCors();
+  app.enableCors({
+  origin: ['https://prxdockerimagefront-production.up.railway.app'],
+  credentials: true,
+});
   app.use(helmet());
   app.use(compression());
   app.set('trust proxy', true);
